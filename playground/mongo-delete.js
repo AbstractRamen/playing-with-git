@@ -1,4 +1,4 @@
-const {MongoDB, ObjectID} = require('mongodb');
+const {MongoClient, ObjectID} = require('mongodb');
 
 MongoClient.connect('mongodb://localhost:27017/TodoApp',
   { useNewUrlParser: true},
@@ -9,11 +9,23 @@ MongoClient.connect('mongodb://localhost:27017/TodoApp',
     }
     console.log('Successfully connected to MongoDB server');
 
-    //delete one
+    const db = client.db('TodoApp')
 
+    //delete one
+    // db.collection('Todos').deleteOne({text: "Walk cat"}).then((result) => {
+    //   console.log(result)
+    // })
+    //
     //delete many
+    // db.collection('Todos').deleteMany({text: "Walk cat"}).then((result) => {
+    //   console.log(result)
+    // })
 
     //findOneAndDelete
+    // db.collection('Todos').findOneAndDelete({completed: false}).then((result) => {
+    //   console.log(result);
+    // })
 
+    client.close();
 
 })
