@@ -11,7 +11,18 @@ MongoClient.connect('mongodb://localhost:27017/TodoApp',
 
     const db = client.db('TodoApp')
 
-
+    db.collection('Todos').findOneAndUpdate({
+      text: "Pet dog"
+    }, {
+      $set: {
+        completed: false
+      }
+    }, {
+        returnNewDocument: true
+    })
+    .then((result) => {
+      console.log(result)
+    })
 
     client.close();
 
