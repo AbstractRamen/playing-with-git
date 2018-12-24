@@ -1,3 +1,5 @@
+var {mongoose} = require('../server/db/mongoose');
+
 var User = mongoose.model('User', {
   email: {
     type: String,
