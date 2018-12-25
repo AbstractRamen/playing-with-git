@@ -56,7 +56,7 @@ app.get('/todo/:id', (req, res) => {
   const id = req.params.id;
 
   if(!ObjectID.isValid(id)){
-    res.status(404).send(e);
+    res.status(404).send();
   }
 
   Todo.findById(id).then((todo) => {
@@ -65,7 +65,7 @@ app.get('/todo/:id', (req, res) => {
     }
     res.status(200).send(todo)
   }, (e) => {
-    res.status(400).send(e);
+    res.status(400).send();
   })
 
 })
