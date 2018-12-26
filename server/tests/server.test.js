@@ -2,6 +2,7 @@ const expect = require('expect');
 const request = require('supertest');
 const {ObjectID} = require('mongodb');
 
+const {mongoose} = require('mongoose');
 const {app} = require('./../server');
 const {Todo} = require('./../../models/todos');
 
