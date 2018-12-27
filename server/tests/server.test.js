@@ -92,3 +92,39 @@ describe('GET for /todo/:id', ()=> {
       .end(done);
   })
 })
+
+describe('DELETE for /todo/:id', () => {
+  it('should remove a todo', (done) => {
+    const testId = samptodos[1]._id.toHexString();
+
+    request(app)
+      .delete(`/todo/${testId}`)
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.result._id).toBe(testId)
+      }).end((err, res) => {
+        if (err){
+          return done(err);
+        }
+
+      Todo.findById(testId).then((todo) => {
+        expect(todo).toBe(null);
+        done();
+      }).catch((e) => done(e))
+    });
+  });
+
+  it('should return a 404 if todo not found', (done) => {
+    request(app)
+      .delete(`/todo/${samptodos[0]._id.toHexString()[0,-2] + '2'}`)
+      .expect(404)
+      .end(done)
+  })
+
+  it('should return a 404 if invalid ID', (done) => {
+    request(app)
+      .delete('/todo/123')
+      .expect(404)
+      .end(done)
+  })
+})

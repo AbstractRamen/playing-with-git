@@ -72,18 +72,19 @@ app.get('/todo/:id', (req, res) => {
 });
 
 app.delete('/todo/:id', (req, res) => {
-  const id = req.params.id;
+  const todoId = req.params.id;
 
-  if(!ObjectID.isValid(id)){
+  if(!ObjectID.isValid(todoId)){
     return res.status(404).send();
-  })
+  }
 
-  Todo.findByIdAndRemove(id).then((result) => {
-    if (result !== null){
-      res.status(200).send();
-    } else {
-      res.status(404).send();
-    }
+  Todo.findOneAndDelete({_id: todoId}).then((result) => {
+    if (!result){
+      return res.status(404).send();
+    };
+
+    res.send({result});
+
   }).catch((e) => {
     res.status(400).send();
   })
