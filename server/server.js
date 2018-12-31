@@ -1,6 +1,10 @@
+require('./config/config.js';
+)
+
 const {ObjectID} = require('mongodb');
-var express = require('express');
-var bodyParser = require('body-parser');
+const express = require('express');
+const bodyParser = require('body-parser');
+const _ = require('lodash');
 
 var {mongoose} = require('./db/mongoose');
 var {Todo} = require('../models/todos');
@@ -94,6 +98,33 @@ app.listen(port, ()=> {
   console.log(`Started on port ${port}`);
 });
 
+app.patch('/todo/:id', (req, res) => {
+  const todoId = req.params.id;
+  const body = _.pick(req.body, ['text', 'completed']);
 
+  if(!ObjectID.isValid(todoId)) {
+    return res.status(404).send();
+  }
+
+  if(_.isBoolean(body.completed) && body.completed){
+    body.completedAt = new Date().getTime();
+  } else {
+    body.completedAt = null;
+    body.completed = false;
+  }
+
+  Todo.findOneAndUpdate({_id: todoId}, {$set: body}, {new: true}).then((todo) => {
+    if(!todo){
+      return res.status(404).send();
+    }
+
+    res.status(200).send(todo);
+
+  }).catch((e) => {
+    return res.send(400).send();
+  })
+
+
+})
 
 module.exports = {app};
