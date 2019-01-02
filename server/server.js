@@ -8,6 +8,7 @@ const _ = require('lodash');
 var {mongoose} = require('./db/mongoose');
 var {Todo} = require('../models/todos');
 var {User} = require('../models/users');
+const {authenticate} = require('./middleware/authenticate');
 
 // var newDo = new Todo({
 //   text: "Cook Lunch",
@@ -34,6 +35,53 @@ var app = express();
 const port = process.env.PORT || 3000;
 
 app.use(bodyParser.json())
+
+app.post('/users', (req, res) => {
+  var body = _.pick(req.body, ['email', 'password']);
+  var newUser = new User(body)
+
+  newUser.save().then(() => {
+    return newUser.generateAuthToken();
+  }).then((token) => {
+    res.header('x-header', token).send(newUser);
+  }).catch((e) => {
+    res.status(400).send(e)
+  })
+
+})
+
+// var authenticate = (req, res, next) => {
+//   var token = req.header('x-auth');
+//
+//
+//   User.findByToken(token).then((user)=> {
+//     if(!user){
+//       return Promise.reject();
+//     }
+//
+//     req.user = user
+//     req.token = token
+//
+//     next();
+//   }).catch((e) => {
+//     res.status(401).send();
+//   })
+// }
+
+app.get('/users/me', authenticate, (req, res) => {
+  // var token = req.header('x-auth');
+  //
+  // User.findByToken(token).then((user)=> {
+  //   if(!user){
+  //     return Promise.reject();
+  //   }
+  //
+  //   res.send(user);
+  // }).catch((e) => {
+  //   res.status(401).send();
+  // })
+  res.send(req.user);
+})
 
 app.post('/todos', (req, res) => {
   var todo = new Todo({
