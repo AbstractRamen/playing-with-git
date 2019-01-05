@@ -217,7 +217,7 @@ describe('POST /users', () => {
       .send({email, password})
       .expect(200)
       .expect((res) => {
-        expect(res.header['x-header']).toBeTruthy();
+        expect(res.header['x-auth']).toBeTruthy();
         expect(res.body.email).toBe(email);
         expect(res.body._id).toBeTruthy();
       }).end((err) => {
@@ -265,12 +265,24 @@ describe('POST /users/login', () => {
       .post('/users/login')
       .send({email, password})
       .expect(400)
-      .end(done);
+      .expect((res) => {
+        expect(res.header['x-auth']).toBeFalsy();
+      })
+      .end((err, res) => {
+        if(err){
+          return done(err)
+        }
+
+        User.findById({_id: testUsers[1]._id}).then((user)=> {
+          expect(user.tokens.length).toBe(0);
+          done();
+        });
+      }).catch((e) => done(e));
   })
 
   it('should accept valid credentials and record a token', (done) => {
-    var email = testUsers[1].email;
-    var password = testUsers[1].password;
+    var email = testUsers[0].email;
+    var password = testUsers[0].password;
 
 
     request(app)
@@ -278,9 +290,9 @@ describe('POST /users/login', () => {
       .send({email, password})
       .expect(200)
       .expect((res) => {
-        expect(res.body.email).toBe(testUsers[1].email);
-        expect(res.body._id).toBe(testUsers[1]._id.toHexString());
-        expect(res.header['x-header']).toBeTruthy();
+        expect(res.body.email).toBe(testUsers[0].email);
+        expect(res.body._id).toBe(testUsers[0]._id.toHexString());
+        expect(res.header['x-auth']).toBeTruthy();
       })
       .end((err, res) => {
         if(err){
@@ -288,9 +300,9 @@ describe('POST /users/login', () => {
         }
 
         User.findById({_id: testUsers[0]._id}).then((user) => {
-          expect(user.tokens[0]).toContain({
+          expect(user.tokens[1]).toMatchObject({
             access: 'auth',
-            token: res.header['x-header']
+            token: res.header['x-auth']
           });
           done();
         }).catch((e) => done(e))

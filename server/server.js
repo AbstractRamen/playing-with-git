@@ -43,7 +43,7 @@ app.post('/users', (req, res) => {
   newUser.save().then(() => {
     return newUser.generateAuthToken();
   }).then((token) => {
-    res.header('x-header', token).send(newUser);
+    res.header('x-auth', token).send(newUser);
   }).catch((e) => {
     res.status(400).send(e)
   })
@@ -55,30 +55,12 @@ app.post('/users/login', (req, res) => {
 
   User.findByCredentials(body.email, body.password).then((user) => {
     return user.generateAuthToken().then((token) => {
-      res.header('x-header', token).send(user);
+      res.header('x-auth', token).send(user);
     }).catch((e) => {
       res.status(400).send();
     });
   });
 })
-
-// var authenticate = (req, res, next) => {
-//   var token = req.header('x-auth');
-//
-//
-//   User.findByToken(token).then((user)=> {
-//     if(!user){
-//       return Promise.reject();
-//     }
-//
-//     req.user = user
-//     req.token = token
-//
-//     next();
-//   }).catch((e) => {
-//     res.status(401).send();
-//   })
-// }
 
 app.get('/users/me', authenticate, (req, res) => {
   // var token = req.header('x-auth');
@@ -93,6 +75,10 @@ app.get('/users/me', authenticate, (req, res) => {
   //   res.status(401).send();
   // })
   res.send(req.user);
+})
+
+app.delete('/users/logout', authenticate, (req, res) => {
+  
 })
 
 app.post('/todos', (req, res) => {
@@ -153,10 +139,6 @@ app.delete('/todo/:id', (req, res) => {
   })
 })
 
-app.listen(port, ()=> {
-  console.log(`Started on port ${port}`);
-});
-
 app.patch('/todo/:id', (req, res) => {
   const todoId = req.params.id;
   const body = _.pick(req.body, ['text', 'completed']);
@@ -185,5 +167,10 @@ app.patch('/todo/:id', (req, res) => {
 
 
 })
+
+app.listen(port, ()=> {
+  console.log(`Started on port ${port}`);
+});
+
 
 module.exports = {app};
