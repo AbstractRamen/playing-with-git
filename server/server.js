@@ -56,11 +56,12 @@ app.post('/users/login', (req, res) => {
   User.findByCredentials(body.email, body.password).then((user) => {
     return user.generateAuthToken().then((token) => {
       res.header('x-auth', token).send(user);
-    }).catch((e) => {
+    })
+  }).catch((e) => {
       res.status(400).send();
     });
   });
-})
+
 
 app.get('/users/me', authenticate, (req, res) => {
   // var token = req.header('x-auth');
@@ -78,8 +79,12 @@ app.get('/users/me', authenticate, (req, res) => {
 })
 
 app.delete('/users/logout', authenticate, (req, res) => {
-  
-})
+  req.user.removeToken(req.token).then(() => {
+    res.status(200).send();
+  }, () => {
+    res.status(400).send();
+  });
+});
 
 app.post('/todos', (req, res) => {
   var todo = new Todo({
