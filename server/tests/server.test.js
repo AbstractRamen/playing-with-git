@@ -268,7 +268,7 @@ describe('POST /users/login', () => {
       .end(done);
   })
 
-  it('should accept valid credentials', (done) => {
+  it('should accept valid credentials and record a token', (done) => {
     var email = testUsers[1].email;
     var password = testUsers[1].password;
 
@@ -280,7 +280,7 @@ describe('POST /users/login', () => {
       .expect((res) => {
         expect(res.body.email).toBe(testUsers[1].email);
         expect(res.body._id).toBe(testUsers[1]._id.toHexString());
-        expect(res.header['x-header']).toBe('c');
+        expect(res.header['x-header']).toBeTruthy();
       })
       .end((err, res) => {
         if(err){
@@ -290,7 +290,7 @@ describe('POST /users/login', () => {
         User.findById({_id: testUsers[0]._id}).then((user) => {
           expect(user.tokens[0]).toContain({
             access: 'auth',
-            token: res.header['x-auth']
+            token: res.header['x-header']
           });
           done();
         }).catch((e) => done(e))
