@@ -50,6 +50,18 @@ app.post('/users', (req, res) => {
 
 })
 
+app.post('/users/login', (req, res) => {
+  var body = _.pick(req.body, ['email', 'password']);
+
+  User.findByCredentials(body.email, body.password).then((user) => {
+    return user.generateAuthToken().then((token) => {
+      res.header('x-header', token).send(user);
+    }).catch((e) => {
+      res.status(400).send();
+    });
+  });
+})
+
 // var authenticate = (req, res, next) => {
 //   var token = req.header('x-auth');
 //

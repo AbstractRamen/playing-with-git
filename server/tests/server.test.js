@@ -5,21 +5,21 @@ const {ObjectID} = require('mongodb');
 const {mongoose} = require('mongoose');
 const {app} = require('./../server');
 const {Todo} = require('./../../models/todos');
+const {User} = require('./../../models/users');
+const {samptodos, populateTodos, testUsers, populateUsers} = require('./seed/seed.js');
 
-const samptodos = [{
-  _id: new ObjectID,
-  text: "First"
-}, {
-  _id: new ObjectID,
-  text: 'Second',
-  completed: false,
-  completedAt: 333
-}]
+// const samptodos = [{
+//   _id: new ObjectID,
+//   text: "First"
+// }, {
+//   _id: new ObjectID,
+//   text: 'Second',
+//   completed: false,
+//   completedAt: 333
+// }]
 
-beforeEach((done) => {
-  Todo.deleteMany({}).then(() => {
-    return Todo.insertMany(samptodos).then(()=> done())});
-})
+beforeEach(populateUsers);
+beforeEach(populateTodos);
 
 describe('POST /todos', () => {
   it('should create a new to do', (done) => {
@@ -66,6 +66,16 @@ describe('POST /todos', () => {
           done(err);
         })
       })
+  })
+})
+
+describe('GET for /todos', () => {
+  it('should grab all to-dos', (done) => {
+    request(app)
+      .get('/todos')
+      .expect((res) => {
+        expect(res.body.todos.length).toBe(2);
+      }).end(done);
   })
 })
 
@@ -171,5 +181,120 @@ describe('PATCH /todo/:id', () => {
         expect(todo.body.completed).toBe(false);
         expect(todo.body.completedAt).toBeNull();
       }).end(done)
+  })
+})
+
+describe('GET /users/me', () => {
+  it('it should return user if authenticated', (done) => {
+    request(app)
+      .get('/users/me')
+      .set('x-auth', testUsers[0].tokens[0].token)
+      .expect((res) => {
+        expect(res.body.email).toBe(testUsers[0].email)
+        expect(res.body._id).toBe(testUsers[0]._id.toHexString())
+      }).end(done);
+  })
+
+  it('it should return a 401 if not authenticated', (done) => {
+    request(app)
+      .get('/users/me')
+      .set('x-auth', 'fakeToken')
+      .expect(401)
+      .expect((res) => {
+        expect(res.body).toEqual({});
+      })
+      .end(done);
+  })
+})
+
+describe('POST /users', () => {
+  it('should create a user', (done) => {
+    var email = 'ememem@gmail.com';
+    var password = 'passmannn';
+
+    request(app)
+      .post('/users')
+      .send({email, password})
+      .expect(200)
+      .expect((res) => {
+        expect(res.header['x-header']).toBeTruthy();
+        expect(res.body.email).toBe(email);
+        expect(res.body._id).toBeTruthy();
+      }).end((err) => {
+        if(err){
+          return done(err);
+        }
+
+        User.findOne({email}).then((user) => {
+          expect(user.email).toBe(email);
+          expect(user.password).not.toBe(password);
+          done();
+        })
+      });
+  })
+
+  it('should return validation errors if request invalid', (done) => {
+    var email = 'ememem@gmail.com';
+    var password = 'pass';
+
+    request(app)
+      .post('/users')
+      .send({email, password})
+      .expect(400)
+      .end(done);
+  })
+
+  it('should not create a user if email in use', (done) => {
+    var usedEmail = 'heyhey@aol.com';
+    var password = 'asdasdasd';
+
+    request(app)
+      .post('/users')
+      .send({email: usedEmail, password})
+      .expect(400).end(done);
+  })
+})
+
+describe('POST /users/login', () => {
+  it('should reject invalid credentials', (done) => {
+    var email = testUsers[1].email;
+    var password = 'poopoo';
+
+
+    request(app)
+      .post('/users/login')
+      .send({email, password})
+      .expect(400)
+      .end(done);
+  })
+
+  it('should accept valid credentials', (done) => {
+    var email = testUsers[1].email;
+    var password = testUsers[1].password;
+
+
+    request(app)
+      .post('/users/login')
+      .send({email, password})
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.email).toBe(testUsers[1].email);
+        expect(res.body._id).toBe(testUsers[1]._id.toHexString());
+        expect(res.header['x-header']).toBe('c');
+      })
+      .end((err, res) => {
+        if(err){
+          return done(err)
+        }
+
+        User.findById({_id: testUsers[0]._id}).then((user) => {
+          expect(user.tokens[0]).toContain({
+            access: 'auth',
+            token: res.header['x-auth']
+          });
+          done();
+        }).catch((e) => done(e))
+      });
+
   })
 })
