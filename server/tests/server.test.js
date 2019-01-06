@@ -310,3 +310,24 @@ describe('POST /users/login', () => {
 
   })
 })
+
+describe('DELETE /users/logout', () => {
+  it('removes the token upon valid token receiving', (done) => {
+    var token = testUsers[0].tokens[0].token
+
+    request(app)
+      .delete('/users/logout')
+      .set('x-auth', token)
+      .expect(200)
+      .end((err, res) => {
+        if (err) {
+          return done(err)
+        }
+
+        User.findById({_id: testUsers[0]._id}).then((user) => {
+          expect(user.tokens.length).toBe(0)
+          done();
+        }).catch((e) => done(e));
+      })
+  })
+})
