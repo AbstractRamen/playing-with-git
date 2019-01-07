@@ -86,6 +86,7 @@ describe('GET for /todo/:id', ()=> {
   it('should return a todo', (done) => {
     request(app)
       .get(`/todo/${samptodos[0]._id.toHexString()}`)
+      .set('x-auth', testUsers[0].tokens[0].token)
       .expect(200)
       .expect((res) => {
         expect(res.body.text).toBe(samptodos[0].text)
@@ -93,9 +94,18 @@ describe('GET for /todo/:id', ()=> {
       .end(done);
   })
 
+  it('should not return a todo from another user', (done) => {
+    request(app)
+      .get(`/todo/${samptodos[1]._id.toHexString()}`)
+      .set('x-auth', testUsers[0].tokens[0].token)
+      .expect(404)
+      .end(done);
+  })
+
   it('should return a 404 if to do is not found', (done) => {
     request(app)
       .get(`/todo/${samptodos[0]._id.toHexString()[0,-2] + '2'}`)
+      .set('x-auth', testUsers[0].tokens[0].token)
       .expect(404)
       .end(done);
   })
@@ -103,6 +113,7 @@ describe('GET for /todo/:id', ()=> {
   it('should return a 404 for a nonvalid ID', (done) => {
     request(app)
       .get(`/todo/${samptodos[0]._id + '231'}`)
+      .set('x-auth', testUsers[0].tokens[0].token)
       .expect(404)
       .end(done);
   })
@@ -115,6 +126,7 @@ describe('DELETE for /todo/:id', () => {
     request(app)
       .delete(`/todo/${testId}`)
       .expect(200)
+      .set('x-auth', testUsers[1].tokens[0].token)
       .expect((res) => {
         expect(res.body.result._id).toBe(testId)
       }).end((err, res) => {
@@ -132,6 +144,7 @@ describe('DELETE for /todo/:id', () => {
   it('should return a 404 if todo not found', (done) => {
     request(app)
       .delete(`/todo/${samptodos[0]._id.toHexString()[0,-2] + '2'}`)
+      .set('x-auth', testUsers[1].tokens[0].token)
       .expect(404)
       .end(done)
   })
@@ -139,6 +152,7 @@ describe('DELETE for /todo/:id', () => {
   it('should return a 404 if invalid ID', (done) => {
     request(app)
       .delete('/todo/123')
+      .set('x-auth', testUsers[1].tokens[0].token)
       .expect(404)
       .end(done)
   })
@@ -147,11 +161,12 @@ describe('DELETE for /todo/:id', () => {
 describe('PATCH /todo/:id', () => {
   it('should update the todo', (done) => {
 
-    const todoId = samptodos[1]._id.toHexString();
+    const todoId = samptodos[0]._id.toHexString();
     const text = "Updated"
 
     request(app)
       .patch(`/todo/${todoId}`)
+      .set('x-auth', testUsers[0].tokens[0].token)
       .send({
         completed: true,
         text
@@ -177,6 +192,7 @@ describe('PATCH /todo/:id', () => {
 
     request(app)
       .patch(`/todo/${todoId}`)
+      .set('x-auth', testUsers[0].tokens[0].token)
       .send({
         completed: false
       }).expect(200)
